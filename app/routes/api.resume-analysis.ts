@@ -1,3 +1,4 @@
+import { requireUser } from "~/services/auth.server";
 
 import { extractTextFromPdf } from "~/services/pdf-parse.server";
 import { generateResumeAnalysis } from "~/services/gemini.server";
@@ -7,6 +8,7 @@ export async function loader() {
 }
 
 export async function action({ request }: { request: Request }) {
+  await requireUser(request);
   try {
     const formData = await request.formData();
     const file = formData.get("resume");

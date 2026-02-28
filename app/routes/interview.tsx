@@ -1,5 +1,7 @@
+import type { Route } from "./+types/interview";
 import { useState, type FormEvent } from 'react';
 import Navbar from '~/components/Navbar';
+import { requireUser } from "~/services/auth.server";
 
 export const meta = () => [
   { title: 'SmartCV | Interview Questions' },
@@ -11,6 +13,11 @@ interface Question {
   answer: string; 
   category: string;
   difficulty: string;
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  await requireUser(request);
+  return null;
 }
 
 const Interview = () => {
