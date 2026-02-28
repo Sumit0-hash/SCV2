@@ -1,4 +1,5 @@
 import type { Route } from "./+types/home";
+import { requireUser } from "~/services/auth.server";
 import Navbar from "~/components/Navbar";
 import ResumeCard from "~/components/ResumeCard";
 import { Link } from "react-router";
@@ -10,6 +11,11 @@ export function meta({}: Route.MetaArgs) {
     { title: "SmartCV" },
     { name: "description", content: "Smart feedback for your dream job!" },
   ];
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  await requireUser(request);
+  return null;
 }
 
 export default function Home() {

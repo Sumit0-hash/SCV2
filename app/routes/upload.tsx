@@ -1,3 +1,4 @@
+import type { Route } from "./+types/upload";
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { convertPdfToImage } from '~/lib/pdf2img';
@@ -5,6 +6,12 @@ import FileUploader from '~/components/FileUploader';
 import Navbar from '~/components/Navbar';
 import { generateUUID } from '~/lib/utils';
 import { saveResumeRecord } from '~/lib/resume-storage';
+import { requireUser } from "~/services/auth.server";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  await requireUser(request);
+  return null;
+}
 
 const fileToDataUrl = async (file: File) =>
   new Promise<string>((resolve, reject) => {
