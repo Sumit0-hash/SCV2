@@ -1,5 +1,5 @@
 export interface FeatureDefinition {
-  key: 'jobs' | 'resume-intelligence-suite' | 'interview-qa-generator';
+  key: 'jobs' | 'resume-intelligence-suite' | 'interview-qa-generator' | 'mock-test';
   title: string;
   description: string;
   path: string;
@@ -25,6 +25,13 @@ export const FEATURE_DEFINITIONS: FeatureDefinition[] = [
     description:
       'Generate tailored interview questions and expert-level answers based on your target job role and experience level.',
     path: '/interview-qa-generator',
+  },
+  {
+    key: 'mock-test',
+    title: 'AI Mock Test',
+    description:
+      'Challenge yourself with AI-generated hard-level mock tests tailored to your target job profile with instant evaluation and detailed feedback.',
+    path: '/mock-test',
   },
 ];
 
