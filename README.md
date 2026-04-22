@@ -43,3 +43,5 @@ All environment variables needed are listed in .env.example file
 3. This repo includes `vercel.json` to force the React Router framework preset and build commands.
 
 If you see a Vercel `404: NOT_FOUND` page after deployment, verify the deployment is in **Ready** state and that the project is using the correct root directory and framework preset.
+
+> Note: this project stores auth users in a JSON file for demo purposes. On Vercel, that file is written under `/tmp`, so accounts are ephemeral and can reset between cold starts/deployments.
