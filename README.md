@@ -12,7 +12,7 @@ SmartCV is a React Router + TypeScript app that helps users improve resumes, pre
 - React Router v7
 - TypeScript
 - Tailwind CSS v4
-- Gemini API (question generation)
+- Groq API (question generation)
 - JSearch API (jobs)
 
 ## Quick start
