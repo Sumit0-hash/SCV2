@@ -57,9 +57,48 @@ export interface ResumeAnalysisResponse {
     certifications: string[];
   };
 }
+const extractTextFromUnknown = (item: unknown): string => {
+  if (typeof item === "string" || typeof item === "number" || typeof item === "boolean") {
+    return String(item).trim();
+  }
+
+  if (!item || typeof item !== "object") {
+    return "";
+  }
+
+  const record = item as Record<string, unknown>;
+  const preferredKeys = [
+    "title",
+    "name",
+    "task",
+    "project",
+    "certification",
+    "description",
+    "text",
+    "item",
+    "label",
+    "goal",
+    "action",
+  ];
+
+  for (const key of preferredKeys) {
+    const value = record[key];
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      const normalized = String(value).trim();
+      if (normalized) return normalized;
+    }
+  }
+
+  const primitiveValues = Object.values(record)
+    .filter((value) => typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+
+  return primitiveValues.join(" — ");
+};
 
 const toStringList = (input: unknown): string[] =>
-  Array.isArray(input) ? input.map((item) => String(item).trim()).filter(Boolean) : [];
+  Array.isArray(input) ? input.map(extractTextFromUnknown).filter(Boolean) : [];
 
 const clampScore = (value: unknown) => {
   const numeric = Number(value ?? 0);
