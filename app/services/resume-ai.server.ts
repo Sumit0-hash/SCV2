@@ -100,6 +100,24 @@ const extractTextFromUnknown = (item: unknown): string => {
 const toStringList = (input: unknown): string[] =>
   Array.isArray(input) ? input.map(extractTextFromUnknown).filter(Boolean) : [];
 
+const dedupeCaseInsensitive = (items: string[]): string[] => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const item of items) {
+    const normalized = item.trim();
+    if (!normalized) continue;
+
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    result.push(normalized);
+  }
+
+  return result;
+};
+
 const clampScore = (value: unknown) => {
   const numeric = Number(value ?? 0);
   if (!Number.isFinite(numeric)) return 0;
@@ -161,12 +179,42 @@ const normalizeAnalysis = (input: any): ResumeAnalysisResponse => ({
   },
 });
 
-const normalizeRoadmapResponse = (data: any): CareerRoadmapResponse => ({
-  skill_gap_analysis: {
-    matched_skills: toStringList(data?.skill_gap_analysis?.matched_skills),
-    missing_skills: toStringList(data?.skill_gap_analysis?.missing_skills),
-  },
-  learning_roadmap: Array.isArray(data?.learning_roadmap)
+const normalizeRoadmapResponse = (data: any, parsedResumeData?: unknown): CareerRoadmapResponse => {
+  const resumeSkills = dedupeCaseInsensitive(
+    toStringList((parsedResumeData as any)?.skills)
+  );
+
+  const missingSkills = dedupeCaseInsensitive(
+    toStringList(
+      data?.skill_gap_analysis?.missing_skills ??
+        data?.skill_gap_analysis?.missingSkills ??
+        data?.missing_skills ??
+        data?.missingSkills
+    )
+  );
+
+  const matchedFromResponse = dedupeCaseInsensitive(
+    toStringList(
+      data?.skill_gap_analysis?.matched_skills ??
+        data?.skill_gap_analysis?.matchedSkills ??
+        data?.matched_skills ??
+        data?.matchedSkills
+    )
+  );
+
+  const matchedSkills =
+    matchedFromResponse.length > 0
+      ? matchedFromResponse
+      : resumeSkills.filter(
+          (skill) => !missingSkills.some((missing) => missing.toLowerCase() === skill.toLowerCase())
+        );
+
+  return {
+    skill_gap_analysis: {
+      matched_skills: matchedSkills,
+      missing_skills: missingSkills,
+    },
+    learning_roadmap: Array.isArray(data?.learning_roadmap)
     ? data.learning_roadmap.map((item: any) => ({
         skill: String(item?.skill ?? "").trim(),
         why_needed: String(item?.why_needed ?? "").trim(),
@@ -175,15 +223,16 @@ const normalizeRoadmapResponse = (data: any): CareerRoadmapResponse => ({
         severity: item?.severity === "high" || item?.severity === "low" ? item.severity : "medium",
       }))
     : [],
-  recommended_projects: toStringList(data?.recommended_projects),
-  certifications: toStringList(data?.certifications),
-  timeline_plan: {
-    "30_days": toStringList(data?.timeline_plan?.["30_days"]),
-    "60_days": toStringList(data?.timeline_plan?.["60_days"]),
-    "90_days": toStringList(data?.timeline_plan?.["90_days"]),
-  },
-  overall_readiness_score: String(data?.overall_readiness_score ?? "0%").trim(),
-});
+    recommended_projects: toStringList(data?.recommended_projects),
+    certifications: toStringList(data?.certifications),
+    timeline_plan: {
+      "30_days": toStringList(data?.timeline_plan?.["30_days"]),
+      "60_days": toStringList(data?.timeline_plan?.["60_days"]),
+      "90_days": toStringList(data?.timeline_plan?.["90_days"]),
+    },
+    overall_readiness_score: String(data?.overall_readiness_score ?? "0%").trim(),
+  };
+};
 
 export async function generateResumeAnalysis(resumeText: string, jobTitle: string, jobDescription: string) {
   const prompt = `You are an expert ATS recruiter and resume coach. Analyze the resume for the given role.
@@ -261,5 +310,5 @@ Rules:
     throw new Error("Groq returned non-JSON content.");
   }
 
-  return normalizeRoadmapResponse(parsed);
+  return normalizeRoadmapResponse(parsed, parsedResumeData);
 }
